@@ -5,6 +5,8 @@ Created on 23-Mar-2017 by Michal Konieczny
 """
 import pandas as pd
 import numpy as np
+import seaborn
+import matplotlib.pyplot as plt
 
 
 data = pd.read_csv('nesarc_pds.csv', low_memory = False)
@@ -48,7 +50,7 @@ print(v1_perc)
 
 
 print("Distribution of: WOKE UP TOO EARLY NEARLY EVERY DAY FOR 2+ WEEKS")
-print("1 - Yes, 2 - No")
+print("1 - Yes, 0 - No")
 v2_counts = data["S4AQ4A6"].value_counts(sort=False)
 v2_perc = data["S4AQ4A6"].value_counts(sort=False, normalize = True)
 print(v2_counts)
@@ -69,7 +71,7 @@ print(v2_1_perc)
     
 
 print("Distribution of: FIDGETED/PACED MOST OF THE TIME FOR 2+ WEEKS")
-print("1 - Yes, 2 - No")
+print("1 - Yes, 0 - No")
 v3_counts = data["S4AQ4A10"].value_counts(sort=False)
 v3_perc = data["S4AQ4A10"].value_counts(sort=False, normalize = True)
 print(v3_counts)
@@ -78,7 +80,7 @@ print(v3_perc)
 
 
 print("Distribution of: BECAME SO RESTLESS THAT FELT UNCOMFORTABLE FOR 2+ WEEKS")
-print("1 - Yes, 2 - No")
+print("1 - Yes, 0 - No")
 v4_counts = data["S4AQ4A11"].value_counts(sort=False)
 v4_perc = data["S4AQ4A11"].value_counts(sort=False, normalize = True)
 print(v4_counts)
@@ -96,3 +98,66 @@ v2_1_perc = data["Restless_num"].value_counts(sort=False, normalize = True)
 print(v2_1_counts)
 print(sum(v2_1_counts))
 print(v2_1_perc)
+
+# Here I examine the population in my scope for age & gender
+
+data_sub = data[(data["S4AQ4A5"].notnull())]
+data_sub["CYEAR"] = pd.to_numeric(data_sub["CYEAR"])
+data_sub["DOBY"] = pd.to_numeric(data_sub["DOBY"])
+
+# Calculate age by subtracting date of birth from interview year
+
+data_sub["AGE"] = data_sub["CYEAR"] - data_sub["DOBY"]
+
+# Create age bins
+
+def AGEBINS (row):
+    if row['AGE'] < 21:
+        return "0-20"
+    elif row['AGE'] < 31:
+        return "21-30"
+    elif row['AGE'] < 41:
+        return "31-40"
+    elif row['AGE'] < 51:
+        return "41-50"
+    elif row['AGE'] < 61:
+        return "51-60"
+    elif row['AGE'] < 71:
+        return "61-70"
+    else:
+        return "71+"
+    
+data_sub["AGEBINS"] = data_sub.apply (lambda row: AGEBINS(row), axis=1)
+#print(data_sub["AGEBINS"].value_counts(sort=False))
+
+# Create a histogram of AGE variable
+
+seaborn.distplot(data_sub["AGE"].dropna(), kde=False);
+plt.xlabel("Age of respondent")
+plt.title("Age distribution")
+
+# And here a binned histogram
+
+seaborn.distplot(data_sub["AGE"].dropna(), kde=False, bins=20);
+plt.xlabel("Age of respondent")
+plt.title("Age distribution")
+
+# These graphs will show the relation between my 4 categorical variables and respondents age
+# Bar charts with age bins on x axis and categoricals on y axis
+
+seaborn.factorplot(x="AGEBINS", y="S4AQ4A5", data=data_sub, kind="bar", ci=None, order = ["0-20","21-30","31-40","41-50","51-60","61-70","71+"]);
+plt.xlabel("Age of respondent")
+plt.ylabel("Percentage of 'Had trouble falling asleep'")
+
+seaborn.factorplot(x="AGEBINS", y="S4AQ4A6", data=data_sub, kind="bar", ci=None, order = ["0-20","21-30","31-40","41-50","51-60","61-70","71+"]);
+plt.xlabel("Age of respondent")
+plt.ylabel("Percentage of 'Woke up too early'")
+
+seaborn.factorplot(x="AGEBINS", y="S4AQ4A10", data=data_sub, kind="bar", ci=None, order = ["0-20","21-30","31-40","41-50","51-60","61-70","71+"]);
+plt.xlabel("Age of respondent")
+plt.ylabel("Percentage of 'Fidgeted/Paced'")
+
+seaborn.factorplot(x="AGEBINS", y="S4AQ4A11", data=data_sub, kind="bar", ci=None, order = ["0-20","21-30","31-40","41-50","51-60","61-70","71+"]);
+plt.xlabel("Age of respondent")
+plt.ylabel("Percentage of 'Became uncomfortably restless'")
+ 
