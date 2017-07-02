@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
 import statsmodels.stats.multicomp as multi 
+import statsmodels.api as sm
+import seaborn
+import matplotlib.pyplot as plt
 
 data = pd.read_csv('nesarc_pds.csv', low_memory = False)
 
@@ -106,7 +109,32 @@ mc1 = multi.MultiComparison(sub2['ALC_YEAR'], sub2['S1Q9B'])
 res1 = mc1.tukeyhsd()
 print(res1.summary())
 
+#########################
+
+# test linear regression model
+
+# Center the response variable ALC_DRINK_YR
+
+sub['ALC_DRINK_YR_CENTERED'] = sub['ALC_DRINK_YR'] - sub['ALC_DRINK_YR'].mean()
+
+# check the mean
+print(sub['ALC_DRINK_YR_CENTERED'].mean())
 
 
+model1 = smf.ols('ALC_DRINK_YR_CENTERED ~ MAJORDEPLIFE', data=sub).fit()
+print(model1.summary())
+
+# group means & sd
+print ("Mean")
+mean1 = sub.groupby('MAJORDEPLIFE').mean()
+print (mean1)
+print ("Standard deviation")
+sd1 = sub.groupby('MAJORDEPLIFE').std()
+print (sd1)
+
+# bivariate bar graph
+seaborn.factorplot(x="MAJORDEPLIFE", y="ALC_DRINK_YR_CENTERED", data=sub, kind="bar", ci=None)
+plt.xlabel('Major Life Depression')
+plt.ylabel('Number of alcoholic drinks in a year')
 
 
